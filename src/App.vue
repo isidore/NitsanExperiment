@@ -1,19 +1,43 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { SharedCalendar } from './calendar'
+import { HttpEventStore, type EventStore } from './eventStore'
 import WeekView from './components/WeekView.vue'
+
+const props = withDefaults(defineProps<{ store?: EventStore; pollMs?: number }>(), { pollMs: 3000 })
+const store = props.store ?? new HttpEventStore()
 
 const calendar = reactive(new SharedCalendar()) as SharedCalendar
 const title = ref('')
 const start = ref('')
 const who = ref('')
 const view = ref<'list' | 'calendar'>('list')
+const error = ref('')
 
-function addEvent() {
-  if (!title.value || !start.value || !who.value) return
-  calendar.add({ title: title.value, start: new Date(start.value), addedBy: who.value })
-  title.value = ''
+async function refresh() {
+  try {
+    calendar.replaceAll(await store.list())
+    error.value = ''
+  } catch (e) {
+    error.value = `Cannot reach the calendar server (${(e as Error).message})`
+  }
 }
+
+async function addEvent() {
+  if (!title.value || !start.value || !who.value) return
+  await store.add({ title: title.value, start: new Date(start.value), addedBy: who.value })
+  title.value = ''
+  await refresh()
+}
+
+let timer: ReturnType<typeof setInterval> | undefined
+onMounted(() => {
+  refresh()
+  if (props.pollMs > 0) timer = setInterval(refresh, props.pollMs)
+})
+onUnmounted(() => clearInterval(timer))
+
+defineExpose({ refresh })
 
 const fmt = (d: Date) =>
   d.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -29,6 +53,7 @@ const fmt = (d: Date) =>
       <input data-test="who" v-model="who" placeholder="Your name" />
       <button>Add to shared calendar</button>
     </form>
+    <p v-if="error" class="error">{{ error }}</p>
 
     <div class="heading">
       <h2>Everyone sees</h2>
@@ -54,6 +79,7 @@ input, button { padding: 8px; font: inherit; }
 form button { background: #c96442; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
 .heading { display: flex; align-items: center; justify-content: space-between; }
 .toggle { border: 1px solid #c96442; color: #c96442; background: #fff; border-radius: 6px; cursor: pointer; }
+.error { color: #b00020; }
 ul { padding-left: 20px; }
 .empty { color: #888; }
 </style>

@@ -4,13 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "run-p dev:api dev:web",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev:web": "vite --port 5173",
+    "dev:api": "node --watch server/index.ts",
+    "api": "node server/index.ts"
   },
   "dependencies": {
     "vue": "^3.5.42"

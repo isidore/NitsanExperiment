@@ -15,6 +15,10 @@ export class SharedCalendar {
     return this.events.filter((e) => e.start.toDateString() === day.toDateString())
   }
 
+  replaceAll(events: CalendarEvent[]): void {
+    this.events = [...events]
+  }
+
   all(): CalendarEvent[] {
     return [...this.events].sort((a, b) => a.start.getTime() - b.start.getTime())
   }
