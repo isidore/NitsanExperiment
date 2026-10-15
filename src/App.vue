@@ -98,7 +98,7 @@ const short = (d: Date) => d.toLocaleString(undefined, { weekday: 'short', hour:
             <span class="person" data-test="person"><span class="square" data-test="person-square" :style="{ background: colorFor(e.addedBy) }"></span>{{ e.addedBy }}</span>
             <span v-if="e.attendees.length" class="going" data-test="going">
               <span class="going-label">· going:</span>
-              <template v-for="(a, j) in e.attendees" :key="a"><span v-if="j > 0" class="sr-only">, </span><span class="chip" data-test="attendee-chip" :title="a"><span class="dot" :style="{ background: colorFor(a) }"></span><span data-test="attendee">{{ a }}</span></span></template>
+              <span class="avatars"><template v-for="(a, j) in e.attendees" :key="a"><span v-if="j > 0" class="sr-only">, </span><span class="avatar" data-test="attendee-avatar" :title="a" :style="{ background: colorFor(a) }" aria-hidden="true">{{ a.charAt(0).toUpperCase() }}</span><span class="sr-only" data-test="attendee">{{ a }}</span></template></span>
             </span>
           </li>
           <li v-if="calendar.all().length === 0" class="empty">No events yet.</li>
@@ -129,7 +129,7 @@ const short = (d: Date) => d.toLocaleString(undefined, { weekday: 'short', hour:
             added <b>{{ e.title }}</b> · {{ short(e.start) }}
             <span v-if="e.attendees.length" class="going" data-test="going">
               <span class="going-label">· going:</span>
-              <template v-for="(a, j) in e.attendees" :key="a"><span v-if="j > 0" class="sr-only">, </span><span class="chip" data-test="attendee-chip" :title="a"><span class="dot" :style="{ background: colorFor(a) }"></span><span data-test="attendee">{{ a }}</span></span></template>
+              <span class="avatars"><template v-for="(a, j) in e.attendees" :key="a"><span v-if="j > 0" class="sr-only">, </span><span class="avatar" data-test="attendee-avatar" :title="a" :style="{ background: colorFor(a) }" aria-hidden="true">{{ a.charAt(0).toUpperCase() }}</span><span class="sr-only" data-test="attendee">{{ a }}</span></template></span>
             </span>
           </li>
           <li v-if="recent.length === 0" class="empty">No events yet.</li>
@@ -184,12 +184,12 @@ input:focus { outline: 2px solid var(--ac); outline-offset: -1px; border-color: 
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
 .going { margin-left: 4px; color: var(--mut); display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; vertical-align: middle; }
 .going-label { margin-right: 2px; }
-.chip {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 1px 8px 1px 4px; border-radius: 10px;
-  background: #f6f5f2; border: 1px solid #e3e1dc;
-  color: var(--fg); font-size: 12px; line-height: 18px; white-space: nowrap;
+.avatars { display: inline-flex; padding-left: 6px; }
+.avatar {
+  width: 20px; height: 20px; box-sizing: border-box; margin-left: -6px;
+  border: 2px solid #fff; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px; font-weight: 700; line-height: 1;
 }
-.chip .dot { width: 9px; height: 9px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 </style>
