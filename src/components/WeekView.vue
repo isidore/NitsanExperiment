@@ -32,6 +32,8 @@ const hm = (d: Date) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0
 // Events are one hour long; the small line reads like the mockup: "9:00–10:00 · Llewellyn".
 const MAX_AVATARS = 3
 const initial = (name: string) => name.trim().charAt(0).toUpperCase()
+const isoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000))}`
 </script>
 
@@ -58,6 +60,8 @@ const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000
           v-for="d in week"
           :key="'c' + d.date.toISOString()"
           class="col"
+          data-test="day-column"
+          :data-day="isoDay(d.date)"
           :style="{ height: hours.length * HOUR_PX + 'px', '--hour': HOUR_PX + 'px' }"
         >
           <div
@@ -66,6 +70,7 @@ const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000
             class="ev"
             :class="{ new: newKey !== undefined && eventKey(e) === newKey }"
             data-test="event"
+            :data-hour="e.start.getHours()"
             :style="{ top: top(e.start) + 2 + 'px', height: HOUR_PX - 4 + 'px', background: colorFor(e.addedBy) }">
             <b>{{ e.title }}</b><small>{{ span(e.start) }} · {{ e.addedBy }}</small>
             <span v-if="e.attendees.length" class="att">

@@ -12,7 +12,7 @@ export default defineConfig({
   ],
   server: {
     host: true,
-    proxy: { '/api': 'http://localhost:3001' },
+    proxy: { '/api': `http://localhost:${process.env.API_PORT ?? 3001}` },
   },
   resolve: {
     alias: {

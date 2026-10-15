@@ -70,6 +70,7 @@ flowchart LR
 | `npm test`           | Runs all tests once (`vitest run`)                   |
 | `npm run test:unit`  | Runs Vitest in watch mode                            |
 | `npm run coverage`   | Runs tests with coverage; HTML report in `coverage/index.html` |
+| `npm run e2e`        | End-to-end tests (Playwright, Chromium) against a throwaway API + DB on ports 3011/5183 |
 | `npm run type-check` | Type-checks with `vue-tsc --build`                   |
 | `npm run build`      | Type-check + production build into `dist/`           |
 | `npm run build-only` | Production build without type-checking               |

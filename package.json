@@ -14,12 +14,14 @@
     "dev:web": "vite --port 5173",
     "dev:api": "node --watch server/index.ts",
     "api": "node server/index.ts",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "vue": "^3.5.42"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tsconfig/node24": "^24.0.5",
     "@types/jsdom": "^30.0.0",
     "@types/node": "^24.13.4",

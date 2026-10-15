@@ -40,3 +40,10 @@ __screenshots__/
 
 # SQLite data
 data/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+.e2e-data/
