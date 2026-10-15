@@ -1,5 +1,4 @@
-<!-- After the first push to GitHub, replace OWNER/REPO below (both occurrences) with your GitHub user/org and repository name. -->
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
+[![CI](https://github.com/isidore/NitsanExperiment/actions/workflows/ci.yml/badge.svg)](https://github.com/isidore/NitsanExperiment/actions/workflows/ci.yml)
 
 # 📅 Shared Calendar
 
