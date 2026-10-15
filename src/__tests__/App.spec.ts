@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import App from '../App.vue'
 import { InMemoryEventStore } from '../eventStore'
@@ -86,5 +86,47 @@ describe('Members legend', () => {
     const members = wrapper.findAll('[data-test="member"]').map((m) => m.attributes('title'))
     expect(members).toEqual(['Antonio', 'Llewellyn'])
     expect(wrapper.find('[data-test="member-count"]').text()).toBe('2 members')
+  })
+})
+
+describe('Mockup touches', () => {
+  afterEach(() => vi.useRealTimers())
+
+  it('outlines the avatar of the person typed in "Your name"', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Team lunch', '2026-10-15T12:00', 'Antonio')
+    await addThroughForm(wrapper, 'Learning Hour', '2026-10-15T09:00', 'Llewellyn')
+    await wrapper.find('[data-test="who"]').setValue(' antonio ')
+
+    const me = wrapper.findAll('[data-test="member"]').filter((m) => m.classes('me')).map((m) => m.attributes('title'))
+    expect(me).toEqual(['Antonio'])
+  })
+
+  it('pops in the newly added event and shows its time span and person', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Standup', '2026-10-15T10:00', 'Nitsan')
+    await addThroughForm(wrapper, 'Learning Hour', '2026-10-15T09:00', 'Llewellyn')
+
+    const events = wrapper.findAll('[data-test="event"]')
+    const fresh = events.filter((e) => e.classes('new')).map((e) => e.text())
+    expect(fresh).toEqual(['Learning Hour9:00–10:00 · Llewellyn'])
+  })
+
+  it('confirms an add with a toast that fades after a moment', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Standup', '2026-10-15T10:00', 'Nitsan')
+    await addThroughForm(wrapper, 'Team lunch', '2026-10-15T12:00', 'Antonio')
+
+    const toast = wrapper.find('[data-test="toast"]')
+    expect(toast.text()).toBe('✓ "Team lunch" added — visible to all 2 members')
+    expect(toast.classes('show')).toBe(true)
+
+    vi.advanceTimersByTime(2200)
+    await flushPromises()
+    expect(toast.classes('show')).toBe(false)
   })
 })

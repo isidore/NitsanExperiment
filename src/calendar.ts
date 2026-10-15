@@ -42,3 +42,5 @@ export function weekOf(calendar: SharedCalendar, date: Date): Day[] {
     return { date: day, events: calendar.eventsOn(day) }
   })
 }
+
+export const eventKey = (e: CalendarEvent): string => `${e.start.getTime()}|${e.addedBy}|${e.title}`

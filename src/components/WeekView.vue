@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { weekOf, type SharedCalendar } from '../calendar'
+import { eventKey, weekOf, type SharedCalendar } from '../calendar'
 import { colorFor } from '../colors'
 
-const props = defineProps<{ calendar: SharedCalendar; initialDate?: Date }>()
+const props = defineProps<{ calendar: SharedCalendar; initialDate?: Date; newKey?: string }>()
 
 const HOUR_PX = 48
 const FIRST_HOUR = 7
@@ -28,7 +28,9 @@ const title = computed(() => {
 })
 
 const top = (d: Date) => Math.max(0, (d.getHours() + d.getMinutes() / 60 - FIRST_HOUR) * HOUR_PX)
-const time = (d: Date) => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+const hm = (d: Date) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
+// Events are one hour long; the small line reads like the mockup: "9:00–10:00 · Llewellyn".
+const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000))}`
 </script>
 
 <template>
@@ -54,11 +56,16 @@ const time = (d: Date) => d.toLocaleTimeString(undefined, { hour: 'numeric', min
           v-for="d in week"
           :key="'c' + d.date.toISOString()"
           class="col"
-          :class="{ today: d.date.toDateString() === today }"
           :style="{ height: hours.length * HOUR_PX + 'px', '--hour': HOUR_PX + 'px' }"
         >
-          <div v-for="(e, i) in d.events" :key="i" class="ev" data-test="event" :style="{ top: top(e.start) + 2 + 'px', height: HOUR_PX - 4 + 'px', background: colorFor(e.addedBy) }">
-            <b>{{ e.title }}</b><small>{{ time(e.start) }} · {{ e.addedBy }}</small>
+          <div
+            v-for="(e, i) in d.events"
+            :key="i"
+            class="ev"
+            :class="{ new: newKey !== undefined && eventKey(e) === newKey }"
+            data-test="event"
+            :style="{ top: top(e.start) + 2 + 'px', height: HOUR_PX - 4 + 'px', background: colorFor(e.addedBy) }">
+            <b>{{ e.title }}</b><small>{{ span(e.start) }} · {{ e.addedBy }}</small>
           </div>
         </div>
       </div>
@@ -82,7 +89,8 @@ const time = (d: Date) => d.toLocaleTimeString(undefined, { hour: 'numeric', min
   border-left: 1px solid var(--line);
   background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--hour) - 1px), var(--line) calc(var(--hour) - 1px) var(--hour));
 }
-.col.today { background-color: #c964420a; }
 .ev { position: absolute; left: 3px; right: 3px; z-index: 1; color: #fff; border-radius: 6px; padding: 3px 6px; font-size: 12px; overflow: hidden; box-shadow: 0 1px 2px #0002; }
 .ev small { display: block; opacity: 0.85; }
+.ev.new { animation: pop 0.6s ease; }
+@keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 </style>

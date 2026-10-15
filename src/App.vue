@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
-import { SharedCalendar, type CalendarEvent } from './calendar'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { eventKey, SharedCalendar, type CalendarEvent } from './calendar'
 import { HttpEventStore, type EventStore } from './eventStore'
 import WeekView from './components/WeekView.vue'
 import MembersLegend from './components/MembersLegend.vue'
-import { colorFor } from './colors'
+import { colorFor, personKey } from './colors'
 
 const props = withDefaults(defineProps<{ store?: EventStore; pollMs?: number }>(), { pollMs: 3000 })
 const store = props.store ?? new HttpEventStore()
@@ -16,6 +16,19 @@ const start = ref('')
 const who = ref('')
 const view = ref<'list' | 'calendar'>('calendar')
 const error = ref('')
+const newKey = ref<string>()
+const toast = ref('')
+const toastShown = ref(false)
+let toastTimer: ReturnType<typeof setTimeout> | undefined
+
+const memberCount = computed(() => new Set(calendar.all().map((e) => personKey(e.addedBy)).filter(Boolean)).size)
+
+function showToast(message: string) {
+  toast.value = message
+  toastShown.value = true
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => (toastShown.value = false), 2200)
+}
 
 async function refresh() {
   try {
@@ -30,9 +43,12 @@ async function refresh() {
 
 async function addEvent() {
   if (!title.value || !start.value || !who.value) return
-  await store.add({ title: title.value, start: new Date(start.value), addedBy: who.value })
+  const event = { title: title.value, start: new Date(start.value), addedBy: who.value }
+  await store.add(event)
+  newKey.value = eventKey(event)
   title.value = ''
   await refresh()
+  showToast(`✓ "${event.title}" added — visible to all ${memberCount.value} members`)
 }
 
 let timer: ReturnType<typeof setInterval> | undefined
@@ -40,7 +56,10 @@ onMounted(() => {
   refresh()
   if (props.pollMs > 0) timer = setInterval(refresh, props.pollMs)
 })
-onUnmounted(() => clearInterval(timer))
+onUnmounted(() => {
+  clearInterval(timer)
+  clearTimeout(toastTimer)
+})
 
 defineExpose({ refresh })
 
@@ -53,14 +72,14 @@ const short = (d: Date) => d.toLocaleString(undefined, { weekday: 'short', hour:
   <header class="top">
     <h1>📅 Shared Calendar</h1>
     <span class="group">Group: <b>Learning Hour Team</b></span>
-    <MembersLegend class="legend" :events="calendar.all()" />
+    <MembersLegend class="legend" :events="calendar.all()" :me="who" />
   </header>
 
   <main class="layout">
     <section class="cal-area">
       <p v-if="error" class="error">{{ error }}</p>
 
-      <WeekView v-if="view === 'calendar'" :calendar="calendar">
+      <WeekView v-if="view === 'calendar'" :calendar="calendar" :new-key="newKey">
         <template #actions>
           <button data-test="toggle-view" class="btn" @click="view = 'list'">☰ List view</button>
         </template>
@@ -106,6 +125,7 @@ const short = (d: Date) => d.toLocaleString(undefined, { weekday: 'short', hour:
       </div>
     </aside>
   </main>
+  <div class="toast" :class="{ show: toastShown }" data-test="toast" role="status">{{ toast }}</div>
 </template>
 
 <style scoped>
@@ -128,7 +148,7 @@ const short = (d: Date) => d.toLocaleString(undefined, { weekday: 'short', hour:
 label { display: block; font-size: 13px; color: var(--mut); margin: 8px 0 3px; }
 input { width: 100%; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; font: inherit; color: var(--fg); background: var(--card); }
 input:focus { outline: 2px solid var(--ac); outline-offset: -1px; border-color: var(--ac); }
-.submit { width: 100%; margin-top: 12px; padding: 8px 10px; }
+.submit { width: 100%; margin-top: 12px; }
 
 .feed { list-style: none; margin: 0; padding: 0; font-size: 13px; }
 .feed li { padding: 6px 0; border-bottom: 1px solid var(--line); }
@@ -146,5 +166,7 @@ input:focus { outline: 2px solid var(--ac); outline-offset: -1px; border-color: 
 .error { color: var(--err); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 0 0 12px; }
 .empty { color: var(--mut); }
 .person { display: inline-flex; align-items: center; gap: 4px; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--fg); color: #fff; padding: 10px 16px; border-radius: 8px; opacity: 0; transition: 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 </style>
