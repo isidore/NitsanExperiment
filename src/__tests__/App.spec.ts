@@ -94,18 +94,42 @@ describe('Colors per person', () => {
     expect(square.attributes('style')).toContain(`background: ${rgb(colorFor('Llewellyn'))}`)
   })
 
-  it('shows one dot per attendee on the event block, colored by the attendee', async () => {
+  it('shows an initial avatar per attendee on the event block, colored by the attendee', async () => {
     const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
 
     await addThroughForm(wrapper, 'Team lunch', '2026-10-15T12:00', 'Llewellyn', 'Antonio, Dana, antonio, ')
 
     const block = wrapper.find('[data-test="event"]')
     expect(block.attributes('style')).toContain(`background: ${rgb(colorFor('Llewellyn'))}`)
-    const dots = block.findAll('[data-test="attendee-dot"]')
-    expect(dots.map((d) => d.attributes('title'))).toEqual(['Antonio', 'Dana'])
-    expect(dots[1]!.attributes('style')).toContain(`background: ${rgb(colorFor('Dana'))}`)
-    const going = wrapper.findAll('[data-test="feed"] [data-test="going"] [data-test="attendee"]')
-    expect(going.map((a) => a.text())).toEqual(['Antonio', 'Dana'])
+    const avatars = block.findAll('[data-test="attendee-avatar"]')
+    expect(avatars.map((a) => a.attributes('title'))).toEqual(['Antonio', 'Dana'])
+    expect(avatars.map((a) => a.text())).toEqual(['A', 'D'])
+    expect(avatars[1]!.attributes('style')).toContain(`background: ${rgb(colorFor('Dana'))}`)
+  })
+
+  it('shows three avatars and a "+N" avatar when more than three people are going', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Offsite', '2026-10-15T12:00', 'Llewellyn', 'Antonio, Dana, Nitsan, Llewellyn, Maya')
+
+    const avatars = wrapper.find('[data-test="event"]').findAll('[data-test="attendee-avatar"]')
+    expect(avatars.map((a) => a.text())).toEqual(['A', 'D', 'N', '+2'])
+    expect(avatars[2]!.attributes('style')).toContain(`background: ${rgb(colorFor('Nitsan'))}`)
+  })
+
+  it('shows attendees as colored name chips in the feed and list', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Team lunch', '2026-10-15T12:00', 'Llewellyn', 'Antonio, Dana')
+
+    const chips = wrapper.findAll('[data-test="feed"] [data-test="going"] [data-test="attendee-chip"]')
+    expect(chips.map((c) => c.text())).toEqual(['Antonio', 'Dana'])
+    expect(chips[1]!.find('.dot').attributes('style')).toContain(`background: ${rgb(colorFor('Dana'))}`)
+    expect(wrapper.find('[data-test="feed"] [data-test="going"]').element.textContent).toMatch(/Antonio\W+Dana/)
+
+    await showList(wrapper)
+    const listChips = wrapper.findAll('[data-test="events"] [data-test="attendee-chip"]')
+    expect(listChips.map((c) => c.text())).toEqual(['Antonio', 'Dana'])
   })
 })
 

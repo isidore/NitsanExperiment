@@ -30,6 +30,8 @@ const title = computed(() => {
 const top = (d: Date) => Math.max(0, (d.getHours() + d.getMinutes() / 60 - FIRST_HOUR) * HOUR_PX)
 const hm = (d: Date) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
 // Events are one hour long; the small line reads like the mockup: "9:00–10:00 · Llewellyn".
+const MAX_AVATARS = 3
+const initial = (name: string) => name.trim().charAt(0).toUpperCase()
 const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000))}`
 </script>
 
@@ -68,14 +70,21 @@ const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000
             <b>{{ e.title }}</b><small>{{ span(e.start) }} · {{ e.addedBy }}</small>
             <span v-if="e.attendees.length" class="att">
               <span
-                v-for="a in e.attendees"
+                v-for="a in e.attendees.slice(0, MAX_AVATARS)"
                 :key="a"
-                class="att-dot"
-                data-test="attendee-dot"
+                class="avatar"
+                data-test="attendee-avatar"
                 :title="a"
                 :aria-label="a"
                 :style="{ background: colorFor(a) }"
-              ></span>
+              >{{ initial(a) }}</span>
+              <span
+                v-if="e.attendees.length > MAX_AVATARS"
+                class="avatar more"
+                data-test="attendee-avatar"
+                :title="e.attendees.slice(MAX_AVATARS).join(', ')"
+                :aria-label="`${e.attendees.length - MAX_AVATARS} more`"
+              >+{{ e.attendees.length - MAX_AVATARS }}</span>
             </span>
           </div>
         </div>
@@ -102,8 +111,14 @@ const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000
 }
 .ev { position: absolute; left: 3px; right: 3px; z-index: 1; color: #fff; border-radius: 6px; padding: 3px 6px; font-size: 12px; overflow: hidden; box-shadow: 0 1px 2px #0002; }
 .ev small { display: block; opacity: 0.85; }
-.att { position: absolute; right: 5px; bottom: 5px; display: flex; gap: 3px; }
-.att-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 1px #fff; }
+.att { position: absolute; right: 4px; bottom: 3px; display: flex; padding-left: 6px; }
+.avatar {
+  width: 20px; height: 20px; box-sizing: border-box; margin-left: -6px;
+  border: 2px solid #fff; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px; font-weight: 700; line-height: 1;
+}
+.avatar.more { background: #6b6b70; font-size: 9px; }
 .ev.new { animation: pop 0.6s ease; }
 @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 </style>
