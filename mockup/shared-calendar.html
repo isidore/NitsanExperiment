@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shared Calendar (mockup)</title>
+<style>
+  :root{--bg:#f6f5f2;--card:#fff;--fg:#1d1d1f;--mut:#6b6b70;--line:#e3e1dc;--ac:#c96442;--ac2:#2f6fdb;--ok:#2e8b57}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,sans-serif}
+  header{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--card);border-bottom:1px solid var(--line)}
+  header h1{font-size:20px;margin:0}
+  .group{color:var(--mut)}
+  .members{margin-left:auto;display:flex;align-items:center;gap:6px}
+  .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;font-size:13px;border:2px solid var(--card)}
+  .me{outline:3px solid var(--ac);outline-offset:1px}
+  main{display:grid;grid-template-columns:1fr 300px;gap:20px;padding:20px 24px}
+  .cal{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .bar b{font-size:16px}
+  .btn{border:1px solid var(--line);background:var(--card);border-radius:6px;padding:5px 10px;cursor:pointer;font:inherit}
+  .btn.primary{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+  .grid{display:grid;grid-template-columns:56px repeat(7,1fr)}
+  .dh{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line);font-size:13px;color:var(--mut)}
+  .dh strong{display:block;font-size:18px;color:var(--fg)}
+  .dh.today strong{color:var(--ac)}
+  .hr{height:48px;border-bottom:1px solid var(--line);font-size:11px;color:var(--mut);text-align:right;padding:2px 6px 0 0}
+  .cell{height:48px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);position:relative}
+  .ev{position:absolute;left:3px;right:3px;border-radius:6px;padding:3px 6px;font-size:12px;color:#fff;overflow:hidden;z-index:1;box-shadow:0 1px 2px #0002}
+  .ev small{display:block;opacity:.85}
+  .ev.new{animation:pop .6s ease}
+  @keyframes pop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+  aside{display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .card h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+  label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
+  input,select{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:6px;font:inherit}
+  .row{display:flex;gap:8px}.row>*{flex:1}
+  .feed{list-style:none;margin:0;padding:0;font-size:13px}
+  .feed li{padding:6px 0;border-bottom:1px solid var(--line)}
+  .feed li:last-child{border:0}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--fg);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.3s}
+  .toast.show{opacity:1}
+  .note{font-size:12px;color:var(--mut);padding:0 24px 20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>📅 Shared Calendar</h1>
+  <span class="group">Group: <b>Learning Hour Team</b></span>
+  <div class="members" id="members"></div>
+</header>
+
+<main>
+  <section class="cal">
+    <div class="bar">
+      <button class="btn">‹</button><button class="btn">Today</button><button class="btn">›</button>
+      <b>Week of Oct 12 – 18, 2026</b>
+      <span style="margin-left:auto;color:var(--mut);font-size:13px">Week · Month · List</span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h2>Add event</h2>
+      <form id="f">
+        <label>Title</label><input id="title" value="Team lunch" required>
+        <div class="row">
+          <div><label>Day</label><select id="day"></select></div>
+          <div><label>Start</label><select id="start"></select></div>
+        </div>
+        <div class="row">
+          <div><label>Length</label><select id="len"><option value="1">1 h</option><option value="2">2 h</option><option value="0.5">30 min</option></select></div>
+          <div><label>As</label><select id="who"></select></div>
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:12px">Add to shared calendar</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Everyone sees</h2>
+      <ul class="feed" id="feed"></ul>
+    </div>
+  </aside>
+</main>
+<p class="note">Mockup only: data lives in this page. Happy path — <i>As a group member, I want to add an event to our shared calendar, so that everyone in the group sees when it is happening.</i></p>
+<div class="toast" id="toast"></div>
+
+<script>
+const people=[{n:"Antonio",c:"#2f6fdb"},{n:"Llewellyn",c:"#c96442"},{n:"Nitsan",c:"#2e8b57"},{n:"Dana",c:"#8e44ad"}];
+const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], dates=[12,13,14,15,16,17,18], today=4;
+const hours=[9,10,11,12,13,14,15,16,17];
+let events=[
+  {t:"Learning Hour",d:4,s:9,l:1,w:"Llewellyn"},
+  {t:"Standup",d:1,s:10,l:0.5,w:"Nitsan"},
+  {t:"Design review",d:2,s:14,l:1.5,w:"Dana"},
+  {t:"1:1",d:3,s:11,l:1,w:"Antonio"},
+];
+const col=n=>people.find(p=>p.n===n).c;
+document.getElementById("members").innerHTML=people.map(p=>`<div class="av ${p.n==="Antonio"?"me":""}" style="background:${p.c}" title="${p.n}">${p.n[0]}</div>`).join("")+`<span style="color:var(--mut);font-size:13px;margin-left:6px">${people.length} members</span>`;
+const sel=(id,opts)=>document.getElementById(id).innerHTML=opts.join("");
+sel("day",days.map((d,i)=>`<option value="${i}" ${i===4?"selected":""}>${d} ${dates[i]}</option>`));
+sel("start",hours.map(h=>`<option value="${h}" ${h===12?"selected":""}>${h}:00</option>`));
+sel("who",people.map(p=>`<option>${p.n}</option>`));
+
+function render(newIdx){
+  const g=document.getElementById("grid");
+  let h=`<div></div>`+days.map((d,i)=>`<div class="dh ${i===today?"today":""}">${d}<strong>${dates[i]}</strong></div>`).join("");
+  hours.forEach(hr=>{h+=`<div class="hr">${hr}:00</div>`+days.map((_,i)=>`<div class="cell" data-d="${i}" data-h="${hr}"></div>`).join("")});
+  g.innerHTML=h;
+  events.forEach((e,i)=>{
+    const cell=g.querySelector(`.cell[data-d="${e.d}"][data-h="${Math.floor(e.s)}"]`); if(!cell)return;
+    const el=document.createElement("div"); el.className="ev"+(i===newIdx?" new":"");
+    el.style.background=col(e.w); el.style.top=((e.s%1)*48+2)+"px"; el.style.height=(e.l*48-4)+"px";
+    const end=e.s+e.l, fmt=x=>`${Math.floor(x)}:${x%1?"30":"00"}`;
+    el.innerHTML=`<b>${e.t}</b><small>${fmt(e.s)}–${fmt(end)} · ${e.w}</small>`; cell.appendChild(el);
+  });
+  document.getElementById("feed").innerHTML=events.slice().reverse().slice(0,5).map(e=>`<li><span style="color:${col(e.w)};font-weight:600">${e.w}</span> added <b>${e.t}</b> · ${days[e.d]} ${Math.floor(e.s)}:${e.s%1?"30":"00"}</li>`).join("");
+}
+render();
+document.getElementById("f").onsubmit=ev=>{
+  ev.preventDefault();
+  const e={t:title.value.trim(),d:+day.value,s:+start.value,l:+len.value,w:who.value};
+  events.push(e); render(events.length-1);
+  const t=document.getElementById("toast"); t.textContent=`✓ "${e.t}" added — visible to all ${people.length} members`; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200);
+};
+</script>
+</body>
+</html>
