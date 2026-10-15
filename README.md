@@ -32,6 +32,7 @@ Requires **Node 24+** (for `node:sqlite` and native TypeScript support).
 npm install
 npm run dev     # web app on http://localhost:5173, API on http://localhost:3001
 npm test        # run all tests once
+npm run coverage  # tests + coverage report in coverage/index.html
 ```
 
 The Vite dev server proxies `/api` to the API on port 3001. The API stores data in `data/calendar.db`
@@ -68,6 +69,7 @@ flowchart LR
 | `npm run api`        | API server only                                      |
 | `npm test`           | Runs all tests once (`vitest run`)                   |
 | `npm run test:unit`  | Runs Vitest in watch mode                            |
+| `npm run coverage`   | Runs tests with coverage; HTML report in `coverage/index.html` |
 | `npm run type-check` | Type-checks with `vue-tsc --build`                   |
 | `npm run build`      | Type-check + production build into `dist/`           |
 | `npm run build-only` | Production build without type-checking               |

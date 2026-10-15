@@ -13,7 +13,8 @@
     "test": "vitest run",
     "dev:web": "vite --port 5173",
     "dev:api": "node --watch server/index.ts",
-    "api": "node server/index.ts"
+    "api": "node server/index.ts",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "vue": "^3.5.42"
@@ -23,6 +24,7 @@
     "@types/jsdom": "^30.0.0",
     "@types/node": "^24.13.4",
     "@vitejs/plugin-vue": "^6.0.8",
+    "@vitest/coverage-v8": "^4.1.11",
     "@vue/test-utils": "^2.5.0",
     "@vue/tsconfig": "^0.9.1",
     "jsdom": "^30.0.1",
