@@ -54,6 +54,8 @@ The Vite dev server proxies `/api` to the API on port 3001. The API stores data 
 
 ## Architecture
 
+See [docs/architecture.md](docs/architecture.md) for the full picture, key files and design decisions.
+
 ```mermaid
 flowchart LR
     A[Browser<br/>Vue 3 app] -->|/api/events| B[Vite dev proxy]
