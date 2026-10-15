@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { weekOf, type SharedCalendar } from '../calendar'
+import { colorFor } from '../colors'
 
 const props = defineProps<{ calendar: SharedCalendar; initialDate?: Date }>()
 
@@ -48,7 +49,7 @@ const time = (d: Date) => d.toLocaleTimeString(undefined, { hour: 'numeric', min
         <div v-for="h in hours" :key="h" class="hr" :style="{ height: HOUR_PX + 'px' }">{{ h }}:00</div>
       </div>
       <div v-for="d in week" :key="'c' + d.date.toISOString()" class="col" :style="{ height: hours.length * HOUR_PX + 'px' }">
-        <div v-for="(e, i) in d.events" :key="i" class="ev" :style="{ top: top(e.start) + 'px', height: HOUR_PX - 4 + 'px' }">
+        <div v-for="(e, i) in d.events" :key="i" class="ev" data-test="event" :style="{ top: top(e.start) + 'px', height: HOUR_PX - 4 + 'px', background: colorFor(e.addedBy) }">
           <b>{{ e.title }}</b><small>{{ time(e.start) }} · {{ e.addedBy }}</small>
         </div>
       </div>

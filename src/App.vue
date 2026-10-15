@@ -3,6 +3,8 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { SharedCalendar } from './calendar'
 import { HttpEventStore, type EventStore } from './eventStore'
 import WeekView from './components/WeekView.vue'
+import MembersLegend from './components/MembersLegend.vue'
+import { colorFor } from './colors'
 
 const props = withDefaults(defineProps<{ store?: EventStore; pollMs?: number }>(), { pollMs: 3000 })
 const store = props.store ?? new HttpEventStore()
@@ -45,7 +47,10 @@ const fmt = (d: Date) =>
 
 <template>
   <main>
-    <h1>📅 Shared Calendar</h1>
+    <header>
+      <h1>📅 Shared Calendar</h1>
+      <MembersLegend :events="calendar.all()" />
+    </header>
 
     <form @submit.prevent="addEvent">
       <input data-test="title" v-model="title" placeholder="Title" />
@@ -65,7 +70,8 @@ const fmt = (d: Date) =>
     <WeekView v-if="view === 'calendar'" :calendar="calendar" />
     <ul v-else data-test="events">
       <li v-for="(e, i) in calendar.all()" :key="i">
-        <b>{{ e.title }}</b> · {{ fmt(e.start) }} · added by {{ e.addedBy }}
+        <b>{{ e.title }}</b> · {{ fmt(e.start) }} · added by
+        <span class="person" data-test="person"><span class="dot" :style="{ background: colorFor(e.addedBy) }"></span>{{ e.addedBy }}</span>
       </li>
       <li v-if="calendar.all().length === 0" class="empty">No events yet.</li>
     </ul>
@@ -74,6 +80,7 @@ const fmt = (d: Date) =>
 
 <style scoped>
 main { max-width: 900px; margin: 40px auto; padding: 0 16px; font-family: system-ui, sans-serif; }
+header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
 form { display: flex; flex-wrap: wrap; gap: 8px; }
 input, button { padding: 8px; font: inherit; }
 form button { background: #c96442; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
@@ -82,4 +89,6 @@ form button { background: #c96442; color: #fff; border: 0; border-radius: 6px; c
 .error { color: #b00020; }
 ul { padding-left: 20px; }
 .empty { color: #888; }
+.person { display: inline-flex; align-items: center; gap: 4px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 </style>

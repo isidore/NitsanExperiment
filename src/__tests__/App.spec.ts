@@ -44,3 +44,17 @@ describe('Calendar view', () => {
     expect(wrapper.find('[data-test="week-view"]').exists()).toBe(true)
   })
 })
+
+describe('Members legend', () => {
+  it('lists each distinct person who added events', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Team lunch', '2026-10-15T12:00', 'Antonio')
+    await addThroughForm(wrapper, 'Austin City Limits', '2026-10-17T18:00', 'Llewellyn')
+    await addThroughForm(wrapper, 'Standup', '2026-10-16T09:00', ' antonio')
+
+    const members = wrapper.findAll('[data-test="member"]').map((m) => m.attributes('title'))
+    expect(members).toEqual(['Antonio', 'Llewellyn'])
+    expect(wrapper.find('[data-test="member-count"]').text()).toBe('2 members')
+  })
+})
