@@ -66,6 +66,17 @@ const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000
             data-test="event"
             :style="{ top: top(e.start) + 2 + 'px', height: HOUR_PX - 4 + 'px', background: colorFor(e.addedBy) }">
             <b>{{ e.title }}</b><small>{{ span(e.start) }} · {{ e.addedBy }}</small>
+            <span v-if="e.attendees.length" class="att">
+              <span
+                v-for="a in e.attendees"
+                :key="a"
+                class="att-dot"
+                data-test="attendee-dot"
+                :title="a"
+                :aria-label="a"
+                :style="{ background: colorFor(a) }"
+              ></span>
+            </span>
           </div>
         </div>
       </div>
@@ -91,6 +102,8 @@ const span = (d: Date) => `${hm(d)}–${hm(new Date(d.getTime() + 60 * 60 * 1000
 }
 .ev { position: absolute; left: 3px; right: 3px; z-index: 1; color: #fff; border-radius: 6px; padding: 3px 6px; font-size: 12px; overflow: hidden; box-shadow: 0 1px 2px #0002; }
 .ev small { display: block; opacity: 0.85; }
+.att { position: absolute; right: 5px; bottom: 5px; display: flex; gap: 3px; }
+.att-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 1px #fff; }
 .ev.new { animation: pop 0.6s ease; }
 @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 </style>

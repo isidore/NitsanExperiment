@@ -6,10 +6,10 @@ describe('SharedCalendar', () => {
     const calendar = new SharedCalendar()
     const lunch = new Date(2026, 9, 15, 12, 0)
 
-    calendar.add({ title: 'Team lunch', start: lunch, addedBy: 'Antonio' })
+    calendar.add({ title: 'Team lunch', start: lunch, addedBy: 'Antonio', attendees: [] })
 
     expect(calendar.eventsOn(lunch)).toEqual([
-      { title: 'Team lunch', start: lunch, addedBy: 'Antonio' },
+      { title: 'Team lunch', start: lunch, addedBy: 'Antonio', attendees: [] },
     ])
   })
 })
@@ -18,7 +18,7 @@ describe('weekOf', () => {
   it('lays out the week Sunday to Saturday with each event on its day', () => {
     const calendar = new SharedCalendar()
     const acl = new Date(2026, 9, 17, 18, 0)
-    calendar.add({ title: 'Austin City Limits', start: acl, addedBy: 'Llewellyn' })
+    calendar.add({ title: 'Austin City Limits', start: acl, addedBy: 'Llewellyn', attendees: [] })
 
     const week = weekOf(calendar, new Date(2026, 9, 15))
 

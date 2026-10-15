@@ -1,19 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { CalendarEvent } from '../calendar'
+import { peopleIn, type CalendarEvent } from '../calendar'
 import { colorFor, personKey } from '../colors'
 
 const props = defineProps<{ events: CalendarEvent[]; me?: string }>()
 const meKey = computed(() => personKey(props.me ?? ''))
 
-const members = computed(() => {
-  const seen = new Map<string, string>()
-  for (const e of props.events) {
-    const name = e.addedBy.trim()
-    if (name && !seen.has(personKey(name))) seen.set(personKey(name), name)
-  }
-  return [...seen.values()]
-})
+const members = computed(() => peopleIn(props.events))
 </script>
 
 <template>

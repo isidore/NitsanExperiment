@@ -9,10 +9,11 @@ interface EventJson {
   title: string
   start: string
   addedBy: string
+  attendees?: string[]
 }
 
 export const toJson = (e: CalendarEvent): EventJson => ({ ...e, start: e.start.toISOString() })
-export const fromJson = (e: EventJson): CalendarEvent => ({ ...e, start: new Date(e.start) })
+export const fromJson = (e: EventJson): CalendarEvent => ({ ...e, start: new Date(e.start), attendees: e.attendees ?? [] })
 
 export class InMemoryEventStore implements EventStore {
   private events: CalendarEvent[] = []

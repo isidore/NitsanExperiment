@@ -2,7 +2,25 @@ export interface CalendarEvent {
   title: string
   start: Date
   addedBy: string
+  attendees: string[]
 }
+
+// Trimmed, empties dropped, de-duplicated case-insensitively (first spelling wins).
+export function distinctNames(names: string[]): string[] {
+  const seen = new Map<string, string>()
+  for (const raw of names) {
+    const name = raw.trim()
+    if (name && !seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name)
+  }
+  return [...seen.values()]
+}
+
+// "Antonio, Dana, antonio , " -> ["Antonio", "Dana"]
+export const parseAttendees = (text: string): string[] => distinctNames(text.split(','))
+
+// Everyone involved in the events: who added them and who is going.
+export const peopleIn = (events: CalendarEvent[]): string[] =>
+  distinctNames(events.flatMap((e) => [e.addedBy, ...e.attendees]))
 
 export class SharedCalendar {
   private events: CalendarEvent[] = []

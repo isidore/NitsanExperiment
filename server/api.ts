@@ -15,6 +15,8 @@ export function createApi(store: EventStore): Server {
         for await (const chunk of req) raw += chunk
         const body = JSON.parse(raw)
         if (!body.title || !body.start || !body.addedBy) return send(400, { error: 'title, start and addedBy are required' })
+        if (body.attendees !== undefined && !(Array.isArray(body.attendees) && body.attendees.every((a: unknown) => typeof a === 'string')))
+          return send(400, { error: 'attendees must be an array of names' })
         await store.add(fromJson(body))
         return send(201)
       }

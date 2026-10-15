@@ -2,11 +2,13 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import App from '../App.vue'
 import { InMemoryEventStore } from '../eventStore'
+import { colorFor } from '../colors'
 
-async function addThroughForm(wrapper: ReturnType<typeof mount>, title: string, start: string, who: string) {
+async function addThroughForm(wrapper: ReturnType<typeof mount>, title: string, start: string, who: string, going = '') {
   await wrapper.find('[data-test="title"]').setValue(title)
   await wrapper.find('[data-test="start"]').setValue(start)
   await wrapper.find('[data-test="who"]').setValue(who)
+  await wrapper.find('[data-test="attendees"]').setValue(going)
   await wrapper.find('form').trigger('submit')
   await flushPromises()
 }
@@ -75,7 +77,48 @@ describe('Everyone sees feed', () => {
   })
 })
 
+describe('Colors per person', () => {
+  // jsdom normalizes inline colors to rgb(); compare against colorFor converted the same way.
+  const rgb = (hex: string) => {
+    const n = parseInt(hex.slice(1), 16)
+    return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`
+  }
+
+  it('puts a square of the adder\'s color next to their name in the feed', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Austin City Limits', '2026-10-17T18:00', 'Llewellyn')
+
+    const square = wrapper.find('[data-test="feed"] [data-test="person-square"]')
+    expect(square.exists()).toBe(true)
+    expect(square.attributes('style')).toContain(`background: ${rgb(colorFor('Llewellyn'))}`)
+  })
+
+  it('shows one dot per attendee on the event block, colored by the attendee', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Team lunch', '2026-10-15T12:00', 'Llewellyn', 'Antonio, Dana, antonio, ')
+
+    const block = wrapper.find('[data-test="event"]')
+    expect(block.attributes('style')).toContain(`background: ${rgb(colorFor('Llewellyn'))}`)
+    const dots = block.findAll('[data-test="attendee-dot"]')
+    expect(dots.map((d) => d.attributes('title'))).toEqual(['Antonio', 'Dana'])
+    expect(dots[1]!.attributes('style')).toContain(`background: ${rgb(colorFor('Dana'))}`)
+    const going = wrapper.findAll('[data-test="feed"] [data-test="going"] [data-test="attendee"]')
+    expect(going.map((a) => a.text())).toEqual(['Antonio', 'Dana'])
+  })
+})
+
 describe('Members legend', () => {
+  it('counts attendees as members too', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Team lunch', '2026-10-15T12:00', 'Llewellyn', 'Antonio, Dana')
+
+    const members = wrapper.findAll('[data-test="member"]').map((m) => m.attributes('title'))
+    expect(members).toEqual(['Llewellyn', 'Antonio', 'Dana'])
+  })
+
   it('lists each distinct person who added events', async () => {
     const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
 

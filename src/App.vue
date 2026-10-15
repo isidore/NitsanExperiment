@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
-import { eventKey, SharedCalendar, type CalendarEvent } from './calendar'
+import { eventKey, parseAttendees, peopleIn, SharedCalendar, type CalendarEvent } from './calendar'
 import { HttpEventStore, type EventStore } from './eventStore'
 import WeekView from './components/WeekView.vue'
 import MembersLegend from './components/MembersLegend.vue'
-import { colorFor, personKey } from './colors'
+import { colorFor } from './colors'
 
 const props = withDefaults(defineProps<{ store?: EventStore; pollMs?: number }>(), { pollMs: 3000 })
 const store = props.store ?? new HttpEventStore()
@@ -14,6 +14,7 @@ const recent = ref<CalendarEvent[]>([])
 const title = ref('')
 const start = ref('')
 const who = ref('')
+const going = ref('')
 const view = ref<'list' | 'calendar'>('calendar')
 const error = ref('')
 const newKey = ref<string>()
@@ -21,7 +22,7 @@ const toast = ref('')
 const toastShown = ref(false)
 let toastTimer: ReturnType<typeof setTimeout> | undefined
 
-const memberCount = computed(() => new Set(calendar.all().map((e) => personKey(e.addedBy)).filter(Boolean)).size)
+const memberCount = computed(() => peopleIn(calendar.all()).length)
 
 function showToast(message: string) {
   toast.value = message
@@ -43,10 +44,11 @@ async function refresh() {
 
 async function addEvent() {
   if (!title.value || !start.value || !who.value) return
-  const event = { title: title.value, start: new Date(start.value), addedBy: who.value }
+  const event = { title: title.value, start: new Date(start.value), addedBy: who.value, attendees: parseAttendees(going.value) }
   await store.add(event)
   newKey.value = eventKey(event)
   title.value = ''
+  going.value = ''
   await refresh()
   showToast(`✓ "${event.title}" added — visible to all ${memberCount.value} members`)
 }
@@ -93,7 +95,11 @@ const short = (d: Date) => d.toLocaleString(undefined, { weekday: 'short', hour:
         <ul data-test="events" class="list">
           <li v-for="(e, i) in calendar.all()" :key="i">
             <b>{{ e.title }}</b> · {{ fmt(e.start) }} · added by
-            <span class="person" data-test="person"><span class="dot" :style="{ background: colorFor(e.addedBy) }"></span>{{ e.addedBy }}</span>
+            <span class="person" data-test="person"><span class="square" data-test="person-square" :style="{ background: colorFor(e.addedBy) }"></span>{{ e.addedBy }}</span>
+            <span v-if="e.attendees.length" class="going" data-test="going">
+              · going:
+              <span v-for="a in e.attendees" :key="a" class="person" data-test="attendee"><span class="dot" :style="{ background: colorFor(a) }"></span>{{ a }}</span>
+            </span>
           </li>
           <li v-if="calendar.all().length === 0" class="empty">No events yet.</li>
         </ul>
@@ -110,6 +116,8 @@ const short = (d: Date) => d.toLocaleString(undefined, { weekday: 'short', hour:
           <input id="ev-start" data-test="start" v-model="start" type="datetime-local" />
           <label for="ev-who">Your name</label>
           <input id="ev-who" data-test="who" v-model="who" placeholder="Antonio" />
+          <label for="ev-going">Who's going</label>
+          <input id="ev-going" data-test="attendees" v-model="going" placeholder="Antonio, Dana" />
           <button class="btn primary submit">Add to shared calendar</button>
         </form>
       </div>
@@ -117,8 +125,12 @@ const short = (d: Date) => d.toLocaleString(undefined, { weekday: 'short', hour:
         <h2>Everyone sees</h2>
         <ul class="feed" data-test="feed">
           <li v-for="(e, i) in recent" :key="i">
-            <span class="who" :style="{ color: colorFor(e.addedBy) }">{{ e.addedBy }}</span>
+            <span class="person who" :style="{ color: colorFor(e.addedBy) }"><span class="square" data-test="person-square" :style="{ background: colorFor(e.addedBy) }"></span>{{ e.addedBy }}</span>
             added <b>{{ e.title }}</b> · {{ short(e.start) }}
+            <span v-if="e.attendees.length" class="going" data-test="going">
+              · going:
+              <span v-for="a in e.attendees" :key="a" class="person" data-test="attendee"><span class="dot" :style="{ background: colorFor(a) }"></span>{{ a }}</span>
+            </span>
           </li>
           <li v-if="recent.length === 0" class="empty">No events yet.</li>
         </ul>
@@ -168,5 +180,8 @@ input:focus { outline: 2px solid var(--ac); outline-offset: -1px; border-color: 
 .person { display: inline-flex; align-items: center; gap: 4px; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--fg); color: #fff; padding: 10px 16px; border-radius: 8px; opacity: 0; transition: 0.3s; pointer-events: none; }
 .toast.show { opacity: 1; }
-.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.square { width: 12px; height: 12px; border-radius: 2px; display: inline-block; flex: none; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.going { color: var(--mut); }
+.going .person { color: var(--fg); margin-left: 4px; }
 </style>
