@@ -33,7 +33,8 @@ const members = computed(() => {
 </template>
 
 <style scoped>
-.members { display: flex; align-items: center; gap: 6px; }
-.av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 13px; border: 2px solid #fff; box-shadow: 0 0 0 1px #e3e1dc; }
-.count { color: #6b6b70; font-size: 13px; margin-left: 6px; }
+.members { display: flex; align-items: center; }
+.av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 13px; border: 2px solid var(--card); margin-left: -8px; }
+.av:first-child { margin-left: 0; }
+.count { color: var(--mut); font-size: 13px; margin-left: 8px; }
 </style>

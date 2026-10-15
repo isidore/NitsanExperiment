@@ -11,11 +11,16 @@ async function addThroughForm(wrapper: ReturnType<typeof mount>, title: string, 
   await flushPromises()
 }
 
+async function showList(wrapper: ReturnType<typeof mount>) {
+  await wrapper.find('[data-test="toggle-view"]').trigger('click')
+}
+
 describe('App', () => {
   it('shows an added event in the shared list', async () => {
     const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
 
     await addThroughForm(wrapper, 'Team lunch', '2026-10-15T12:00', 'Antonio')
+    await showList(wrapper)
 
     expect(wrapper.find('[data-test="events"]').text()).toContain('Team lunch')
     expect(wrapper.find('[data-test="events"]').text()).toContain('Antonio')
@@ -29,19 +34,44 @@ describe('App', () => {
     await addThroughForm(antonio, 'Team lunch', '2026-10-15T12:00', 'Antonio')
     await (dana.vm as unknown as { refresh: () => Promise<void> }).refresh()
     await flushPromises()
+    await showList(dana)
 
     expect(dana.find('[data-test="events"]').text()).toContain('Team lunch')
   })
 })
 
 describe('Calendar view', () => {
-  it('shows an added event on its day in the week grid', async () => {
+  it('shows the week grid by default', async () => {
     const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
 
     await addThroughForm(wrapper, 'Austin City Limits', '2026-10-17T18:00', 'Llewellyn')
-    await wrapper.find('[data-test="toggle-view"]').trigger('click')
 
     expect(wrapper.find('[data-test="week-view"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="events"]').exists()).toBe(false)
+  })
+
+  it('toggles between the week grid and the list', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await showList(wrapper)
+    expect(wrapper.find('[data-test="week-view"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="events"]').exists()).toBe(true)
+
+    await wrapper.find('[data-test="toggle-view"]').trigger('click')
+    expect(wrapper.find('[data-test="week-view"]').exists()).toBe(true)
+  })
+})
+
+describe('Everyone sees feed', () => {
+  it('shows the most recently added event first', async () => {
+    const wrapper = mount(App, { props: { store: new InMemoryEventStore(), pollMs: 0 } })
+
+    await addThroughForm(wrapper, 'Austin City Limits', '2026-10-17T18:00', 'Llewellyn')
+    await addThroughForm(wrapper, 'Standup', '2026-10-12T09:00', 'Antonio')
+
+    const items = wrapper.findAll('[data-test="feed"] li').map((li) => li.text())
+    expect(items[0]).toContain('Antonio added Standup')
+    expect(items[1]).toContain('Llewellyn added Austin City Limits')
   })
 })
 
