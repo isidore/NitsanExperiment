@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { SharedCalendar } from './calendar'
+import WeekView from './components/WeekView.vue'
 
-const calendar = reactive(new SharedCalendar())
+const calendar = reactive(new SharedCalendar()) as SharedCalendar
 const title = ref('')
 const start = ref('')
 const who = ref('')
+const view = ref<'list' | 'calendar'>('list')
 
 function addEvent() {
   if (!title.value || !start.value || !who.value) return
@@ -28,8 +30,15 @@ const fmt = (d: Date) =>
       <button>Add to shared calendar</button>
     </form>
 
-    <h2>Everyone sees</h2>
-    <ul data-test="events">
+    <div class="heading">
+      <h2>Everyone sees</h2>
+      <button data-test="toggle-view" class="toggle" @click="view = view === 'list' ? 'calendar' : 'list'">
+        {{ view === 'list' ? '📅 Calendar view' : '☰ List view' }}
+      </button>
+    </div>
+
+    <WeekView v-if="view === 'calendar'" :calendar="calendar" />
+    <ul v-else data-test="events">
       <li v-for="(e, i) in calendar.all()" :key="i">
         <b>{{ e.title }}</b> · {{ fmt(e.start) }} · added by {{ e.addedBy }}
       </li>
@@ -39,10 +48,12 @@ const fmt = (d: Date) =>
 </template>
 
 <style scoped>
-main { max-width: 640px; margin: 40px auto; padding: 0 16px; font-family: system-ui, sans-serif; }
+main { max-width: 900px; margin: 40px auto; padding: 0 16px; font-family: system-ui, sans-serif; }
 form { display: flex; flex-wrap: wrap; gap: 8px; }
 input, button { padding: 8px; font: inherit; }
-button { background: #c96442; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+form button { background: #c96442; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+.heading { display: flex; align-items: center; justify-content: space-between; }
+.toggle { border: 1px solid #c96442; color: #c96442; background: #fff; border-radius: 6px; cursor: pointer; }
 ul { padding-left: 20px; }
 .empty { color: #888; }
 </style>

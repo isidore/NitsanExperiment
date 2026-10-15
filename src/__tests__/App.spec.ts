@@ -15,3 +15,17 @@ describe('App', () => {
     expect(wrapper.find('[data-test="events"]').text()).toContain('Antonio')
   })
 })
+
+describe('Calendar view', () => {
+  it('shows an added event on its day in the week grid', async () => {
+    const wrapper = mount(App)
+
+    await wrapper.find('[data-test="title"]').setValue('Austin City Limits')
+    await wrapper.find('[data-test="start"]').setValue('2026-10-17T18:00')
+    await wrapper.find('[data-test="who"]').setValue('Llewellyn')
+    await wrapper.find('form').trigger('submit')
+    await wrapper.find('[data-test="toggle-view"]').trigger('click')
+
+    expect(wrapper.find('[data-test="week-view"]').exists()).toBe(true)
+  })
+})
