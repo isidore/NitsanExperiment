@@ -6,6 +6,8 @@ A shared calendar for a group: anyone in the group can add events, and everyone 
 Each event block is colored by **who made it**, and attendee avatars show **who's going**.
 It's self-contained (it does not sync to personal calendars).
 
+![Shared Calendar: a week view where each event is colored by who made it, with avatars for who is going, an Add event form, and an "Everyone sees" feed](docs/screenshot.png)
+
 Built live in a Learning Hour with [Claude Code](https://claude.com/claude-code).
 
 ## Features
